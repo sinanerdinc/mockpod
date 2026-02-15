@@ -1,0 +1,53 @@
+name: Mockpod
+options:
+  bundleIdPrefix: com.mockpod
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+packages:
+  SwiftNIO:
+    url: https://github.com/apple/swift-nio.git
+    from: "2.65.0"
+  SwiftNIOSSL:
+    url: https://github.com/apple/swift-nio-ssl.git
+    from: "2.27.0"
+  SwiftCertificates:
+    url: https://github.com/apple/swift-certificates.git
+    from: "1.0.0"
+  SwiftCrypto:
+    url: https://github.com/apple/swift-crypto.git
+    from: "3.0.0"
+  SwiftLog:
+    url: https://github.com/apple/swift-log.git
+    from: "1.5.0"
+targets:
+  Mockpod:
+    type: application
+    platform: macOS
+    sources: [Mockpod]
+    settings:
+      base:
+        INFOPLIST_FILE: Mockpod/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Mockpod/Mockpod.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: com.mockpod.proxy
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "5.10"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - package: SwiftNIO
+        product: NIO
+      - package: SwiftNIO
+        product: NIOHTTP1
+      - package: SwiftNIO
+        product: NIOFoundationCompat
+      - package: SwiftNIOSSL
+        product: NIOSSL
+      - package: SwiftCertificates
+        product: X509
+      - package: SwiftCrypto
+        product: Crypto
+      - package: SwiftLog
+        product: Logging
