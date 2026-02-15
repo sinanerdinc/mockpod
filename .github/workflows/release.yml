@@ -9,6 +9,8 @@ jobs:
   build:
     name: Build macOS App
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -19,6 +21,14 @@ jobs:
 
       - name: Generate Xcode Project
         run: xcodegen
+
+      - name: Cache SPM Packages
+        uses: actions/cache@v4
+        with:
+          path: build/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('project.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
 
       - name: Build App
         # Building in Release mode without code signing identity
