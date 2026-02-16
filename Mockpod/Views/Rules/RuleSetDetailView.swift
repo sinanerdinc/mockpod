@@ -124,7 +124,7 @@ struct RuleSetDetailView: View {
 
             // Rules within the set
             GeometryReader { geometry in
-                HStack(spacing: 0) {
+                HSplitView {
                     // Rule list
                     List(filteredRules, selection: $selectedRuleID) { rule in
                         HStack(spacing: 8) {
@@ -168,12 +168,10 @@ struct RuleSetDetailView: View {
                         .tag(rule.id)
                     }
                     .listStyle(.inset)
-                    .frame(width: geometry.size.width * 0.5)
-
-                    Divider()
+                    .frame(minWidth: 200, idealWidth: geometry.size.width * 0.5, maxWidth: .infinity)
 
                     // Selected rule editor
-                    Group {
+                    ZStack(alignment: .center) {
                         if let ruleID = selectedRuleID,
                            let rule = ruleSet.rules.first(where: { $0.id == ruleID }) {
                             RuleEditorView(rule: Binding(
@@ -196,7 +194,8 @@ struct RuleSetDetailView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     }
-                    .frame(width: geometry.size.width * 0.5)
+                    .frame(minWidth: 300, idealWidth: geometry.size.width * 0.5, maxWidth: .infinity)
+                    .id("RuleSetEditorContainer")
                 }
             }
         }

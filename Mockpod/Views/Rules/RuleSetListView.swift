@@ -10,12 +10,12 @@ struct RuleSetListView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            HStack(spacing: 0) {
+            HSplitView {
                 ruleSetList
-                    .frame(width: geometry.size.width * 0.2)
-                Divider()
+                    .frame(minWidth: 100, idealWidth: geometry.size.width * 0.20, maxWidth: .infinity)
+                
                 ruleSetDetail
-                    .frame(width: geometry.size.width * 0.8)
+                    .frame(minWidth: 400, idealWidth: geometry.size.width * 0.80, maxWidth: .infinity)
             }
         }
         .fileImporter(
@@ -124,25 +124,29 @@ struct RuleSetListView: View {
 
     @ViewBuilder
     private var ruleSetDetail: some View {
-        if let setID = ruleStore.selectedRuleSetID,
-           let ruleSet = ruleStore.ruleSets.first(where: { $0.id == setID }) {
-            RuleSetDetailView(ruleSet: Binding(
-                get: { ruleStore.ruleSets.first(where: { $0.id == setID }) ?? ruleSet },
-                set: {
-                    ruleStore.updateRuleSet($0)
-                    proxyManager.updateActiveRules(ruleStore.allActiveRules)
+        ZStack(alignment: .center) {
+            if let setID = ruleStore.selectedRuleSetID,
+               let ruleSet = ruleStore.ruleSets.first(where: { $0.id == setID }) {
+                RuleSetDetailView(ruleSet: Binding(
+                    get: { ruleStore.ruleSets.first(where: { $0.id == setID }) ?? ruleSet },
+                    set: {
+                        ruleStore.updateRuleSet($0)
+                        proxyManager.updateActiveRules(ruleStore.allActiveRules)
+                    }
+                ))
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "folder")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.quaternary)
+                    Text("Select a rule set")
+                        .foregroundStyle(.secondary)
                 }
-            ))
-        } else {
-            VStack(spacing: 8) {
-                Image(systemName: "folder")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.quaternary)
-                Text("Select a rule set")
-                    .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        // Force HSplitView to respect this view as a stable item
+        .id("RuleSetDetailContainer")
     }
 
     private func exportRuleSet(_ ruleSet: RuleSet) {
