@@ -7,11 +7,14 @@ struct RuleListView: View {
     @State private var editingRule: MockRule?
 
     var body: some View {
-        HSplitView {
-            ruleList
-                .frame(minWidth: 300)
-            ruleDetail
-                .frame(minWidth: 400)
+        GeometryReader { geometry in
+            HSplitView {
+                ruleList
+                    .frame(minWidth: 200, idealWidth: geometry.size.width * 0.35, maxWidth: .infinity)
+                
+                ruleDetail
+                    .frame(minWidth: 300, idealWidth: geometry.size.width * 0.65, maxWidth: .infinity)
+            }
         }
     }
 
@@ -68,22 +71,26 @@ struct RuleListView: View {
 
     @ViewBuilder
     private var ruleDetail: some View {
-        if let ruleID = ruleStore.selectedRuleID,
-           let rule = ruleStore.rules.first(where: { $0.id == ruleID }) {
-            RuleEditorView(rule: Binding(
-                get: { ruleStore.rules.first(where: { $0.id == ruleID }) ?? rule },
-                set: { ruleStore.updateRule($0) }
-            ))
-        } else {
-            VStack(spacing: 8) {
-                Image(systemName: "pencil.and.list.clipboard")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.quaternary)
-                Text("Select a rule to edit")
-                    .foregroundStyle(.secondary)
+        ZStack(alignment: .center) {
+            if let ruleID = ruleStore.selectedRuleID,
+               let rule = ruleStore.rules.first(where: { $0.id == ruleID }) {
+                RuleEditorView(rule: Binding(
+                    get: { ruleStore.rules.first(where: { $0.id == ruleID }) ?? rule },
+                    set: { ruleStore.updateRule($0) }
+                ))
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "pencil.and.list.clipboard")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.quaternary)
+                    Text("Select a rule to edit")
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        // Force HSplitView to respect this view as a stable item
+        .id("RuleDetailContainer") 
     }
 }
 
