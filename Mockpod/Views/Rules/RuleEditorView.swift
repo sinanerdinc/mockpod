@@ -69,11 +69,22 @@ struct RuleEditorView: View {
                         HStack {
                             Text("Delay (ms)")
                                 .foregroundStyle(.secondary)
-                            TextField("0", value: Binding(
-                                get: { Int((rule.mockResponse.delay ?? 0) * 1000) },
-                                set: { rule.mockResponse.delay = Double($0) / 1000.0 }
-                            ), format: .number)
-                            .textFieldStyle(.roundedBorder)
+                            TextField("0", text: Binding(
+                                get: {
+                                    if let delay = rule.mockResponse.delay {
+                                        return String(Int(delay * 1000))
+                                    }
+                                    return ""
+                                },
+                                set: { newValue in
+                                    // Allow empty string to clear the value
+                                    if newValue.isEmpty {
+                                        rule.mockResponse.delay = nil
+                                    } else if let value = Int(newValue) {
+                                        rule.mockResponse.delay = Double(value) / 1000.0
+                                    }
+                                }
+                            ))
                             .frame(width: 80)
                         }
                     }
