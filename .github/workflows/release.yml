@@ -16,8 +16,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install xcodegen
-        run: brew install xcodegen
+      - name: Install Tools
+        run: |
+          brew install xcodegen
+          brew install create-dmg
 
       - name: Generate Xcode Project
         run: xcodegen
@@ -42,26 +44,54 @@ jobs:
             CODE_SIGN_ENTITLEMENTS="" \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Archive App
+      - name: Ad-hoc Sign Binary
+        run: |
+          codesign --force --deep --sign "-" build/Build/Products/Release/Mockpod.app
+
+      - name: Create DMG
+        run: |
+          cd build/Build/Products/Release/
+          create-dmg \
+            --volname "Mockpod Installer" \
+            --volicon "Mockpod.app/Contents/Resources/AppIcon.icns" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --icon "Mockpod.app" 200 190 \
+            --hide-extension "Mockpod.app" \
+            --app-drop-link 600 185 \
+            "Mockpod.dmg" \
+            "Mockpod.app"
+
+      - name: Archive artifacts
         run: |
           cd build/Build/Products/Release/
           zip -r Mockpod.app.zip Mockpod.app
-          echo "SHA256=$(shasum -a 256 Mockpod.app.zip | awk '{print $1}')" >> $GITHUB_ENV
+          echo "SHA256_ZIP=$(shasum -a 256 Mockpod.app.zip | awk '{print $1}')" >> $GITHUB_ENV
+          echo "SHA256_DMG=$(shasum -a 256 Mockpod.dmg | awk '{print $1}')" >> $GITHUB_ENV
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: build/Build/Products/Release/Mockpod.app.zip
+          files: |
+            build/Build/Products/Release/Mockpod.app.zip
+            build/Build/Products/Release/Mockpod.dmg
           body: |
             ## Release Notes
             
             *(Add your release notes here)*
             
-            ## SHA256 Checksum
+            ## Checksums (SHA256)
             
+            ### Mockpod.dmg
             ```
-            ${{ env.SHA256 }}
+            ${{ env.SHA256_DMG }}
+            ```
+            
+            ### Mockpod.app.zip
+            ```
+            ${{ env.SHA256_ZIP }}
             ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
