@@ -146,6 +146,9 @@ struct RuleEditorView: View {
             }
             .padding()
         }
+        .onTapGesture {
+            NSApp.keyWindow?.makeFirstResponder(nil)
+        }
     }
 
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
