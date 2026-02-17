@@ -4,7 +4,7 @@
 
 # Mockpod
 
-**A powerful network interception and mocking tool for macOS developers.**
+**A powerful network interception and mocking tool for macOS users.**
 
 Mockpod is a local proxy server that lets you inspect, modify, and mock HTTP/HTTPS traffic in real-time. It's ideal for testing edge cases, simulating backend failures, and developing frontend applications without a fully functional backend API.
 
