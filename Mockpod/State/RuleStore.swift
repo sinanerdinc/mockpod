@@ -119,7 +119,7 @@ final class RuleStore: ObservableObject {
 
         let dedupedEntries = keyOrder.compactMap { latestEntryByKey[$0] }
         let rules = dedupedEntries.map { MockRule.from(entry: $0) }
-        let ruleSet = RuleSet(name: uniqueName, rules: rules, description: "Recorded on \(Date().formatted())")
+        let ruleSet = RuleSet(name: uniqueName, rules: rules, description: "Recorded on \(Date().formattedDDMMYYYY)")
         addRuleSet(ruleSet)
     }
 

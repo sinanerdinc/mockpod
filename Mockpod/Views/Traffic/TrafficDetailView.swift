@@ -111,7 +111,7 @@ struct TrafficDetailView: View {
                 }
                 infoRow("Duration", entry.formattedDuration)
                 infoRow("Response Size", entry.responseBodySize)
-                infoRow("Time", entry.timestamp.formatted(.dateTime))
+                infoRow("Time", entry.timestamp.formattedDDMMYYYY)
             }
         }
         .padding()

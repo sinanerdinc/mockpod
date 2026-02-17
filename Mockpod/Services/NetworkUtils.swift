@@ -1,5 +1,14 @@
 import Foundation
 
+extension Date {
+    /// Format: dd/MM/yyyy, HH:mm (gün/ay/yıl)
+    var formattedDDMMYYYY: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yyyy, HH:mm"
+        return formatter.string(from: self)
+    }
+}
+
 enum NetworkUtils {
     /// Get the local IP address of the machine (WiFi interface)
     static func getLocalIPAddress() -> String? {

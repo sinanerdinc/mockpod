@@ -11,7 +11,6 @@ enum RuleStatusFilter: String, CaseIterable {
 struct RuleSetDetailView: View {
     @Binding var ruleSet: RuleSet
     @State private var selectedRuleID: UUID?
-    @State private var selectedRuleIDs: Set<UUID> = []
     @State private var statusFilter: RuleStatusFilter = .all
     @State private var methodFilter: String = "ALL"
     @State private var searchText: String = ""
@@ -62,10 +61,10 @@ struct RuleSetDetailView: View {
                     HStack(spacing: 8) {
                         Text("\(ruleSet.rules.count) rules")
                         Text("•")
-                        Text("\(ruleSet.enabledRuleCount) active")
+                        Text("\(ruleSet.enabledRuleCount) enabled")
                             .foregroundStyle(.green)
                         Text("•")
-                        Text(ruleSet.createdAt.formatted(.dateTime))
+                        Text(ruleSet.createdAt.formattedDDMMYYYY)
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -125,9 +124,9 @@ struct RuleSetDetailView: View {
 
             // Rules within the set
             GeometryReader { geometry in
-                HSplitView {
+                HStack(spacing: 0) {
                     // Rule list
-                    List(filteredRules, selection: $selectedRuleIDs) { rule in
+                    List(filteredRules, selection: $selectedRuleID) { rule in
                         HStack(spacing: 8) {
                             Toggle("", isOn: Binding(
                                 get: { rule.isEnabled },
@@ -141,9 +140,6 @@ struct RuleSetDetailView: View {
                             .controlSize(.small)
                             .labelsHidden()
                             .frame(width: 32)
-                            .onTapGesture {
-                                // Prevent row selection when toggling
-                            }
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(rule.name)
@@ -165,37 +161,19 @@ struct RuleSetDetailView: View {
                         .opacity(rule.isEnabled ? 1 : 0.5)
                         .contextMenu {
                             Button("Delete", role: .destructive) {
-                                deleteSelectedRules()
+                                selectedRuleID = nil
+                                ruleSet.rules.removeAll { $0.id == rule.id }
                             }
                         }
                         .tag(rule.id)
                     }
                     .listStyle(.inset)
-                    .frame(minWidth: 200, idealWidth: geometry.size.width * 0.5, maxWidth: .infinity)
-                    .onDeleteCommand {
-                         deleteSelectedRules()
-                    }
-                    .onChange(of: selectedRuleIDs) {
-                        if selectedRuleIDs.count == 1, let id = selectedRuleIDs.first {
-                            selectedRuleID = id
-                        } else if selectedRuleIDs.isEmpty {
-                            selectedRuleID = nil
-                        }
-                    }
-                    .onChange(of: selectedRuleID) {
-                        if let id = selectedRuleID {
-                            if !selectedRuleIDs.contains(id) {
-                                selectedRuleIDs = [id]
-                            }
-                        } else {
-                            if selectedRuleIDs.count <= 1 {
-                                selectedRuleIDs = []
-                            }
-                        }
-                    }
+                    .frame(width: geometry.size.width * 0.5)
+
+                    Divider()
 
                     // Selected rule editor
-                    ZStack(alignment: .center) {
+                    Group {
                         if let ruleID = selectedRuleID,
                            let rule = ruleSet.rules.first(where: { $0.id == ruleID }) {
                             RuleEditorView(rule: Binding(
@@ -218,22 +196,9 @@ struct RuleSetDetailView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     }
-                    .frame(minWidth: 300, idealWidth: geometry.size.width * 0.5, maxWidth: .infinity)
-                    .id("RuleSetEditorContainer")
+                    .frame(width: geometry.size.width * 0.5)
                 }
             }
         }
-    }
-
-
-    private func deleteSelectedRules() {
-        guard !selectedRuleIDs.isEmpty else { return }
-        
-        // Remove rules with IDs in the selection set
-        ruleSet.rules.removeAll { selectedRuleIDs.contains($0.id) }
-        
-        // Clear selection
-        selectedRuleIDs.removeAll()
-        selectedRuleID = nil
     }
 }
