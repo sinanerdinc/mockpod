@@ -6,6 +6,10 @@ struct RuleEditorView: View {
     @EnvironmentObject var ruleStore: RuleStore
 
     @State private var responseBodyText: String = ""
+    @State private var editedBody: String = ""
+    @State private var isSaveSuccess: Bool = false
+    // ID to control when the editor should force update its content from the binding
+    @State private var editorUpdateId: UUID = UUID()
 
     var body: some View {
         ScrollView {
@@ -26,7 +30,7 @@ struct RuleEditorView: View {
                                 Text(type.rawValue).tag(type)
                             }
                         }
-                        .frame(width: 150)
+                        .frame(width: 200)
 
                         Picker("Method", selection: Binding(
                             get: { rule.matcher.method ?? "ALL" },
@@ -37,7 +41,7 @@ struct RuleEditorView: View {
                                 Text(m).tag(m)
                             }
                         }
-                        .frame(width: 120)
+                        .frame(width: 160)
                     }
 
                     TextField("URL Pattern", text: $rule.matcher.urlPattern)
@@ -128,7 +132,7 @@ struct RuleEditorView: View {
 
                 // Response Body
                 section("Response Body") {
-                    MacCodeEditor(text: $rule.mockResponse.body)
+                    CodeEditorView(text: $editedBody, updateId: editorUpdateId)
                         .frame(minHeight: 200)
                         .border(Color.gray.opacity(0.3))
                         .clipShape(RoundedRectangle(cornerRadius: 4))
@@ -137,8 +141,24 @@ struct RuleEditorView: View {
                         Button("Format JSON") {
                             formatJSON()
                         }
+                        
+                        Button {
+                            rule.mockResponse.body = editedBody
+                            isSaveSuccess = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                isSaveSuccess = false
+                            }
+                        } label: {
+                            if isSaveSuccess {
+                                Label("Saved!", systemImage: "checkmark")
+                                    .foregroundStyle(.green)
+                            } else {
+                                Text("Save")
+                            }
+                        }
+                        
                         Spacer()
-                        Text("\(rule.mockResponse.body.count) chars")
+                        Text("\(editedBody.count) chars")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
@@ -149,78 +169,34 @@ struct RuleEditorView: View {
         .onTapGesture {
             NSApp.keyWindow?.makeFirstResponder(nil)
         }
+        .onAppear {
+            editedBody = rule.mockResponse.body
+            editorUpdateId = UUID() // Force update on appear
+        }
+        .onChange(of: rule.id) {
+            editedBody = rule.mockResponse.body
+            editorUpdateId = UUID() // Force update on rule change
+        }
     }
 
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
-            content()
+                content()
         }
     }
 
     private func formatJSON() {
-        guard let data = rule.mockResponse.body.data(using: .utf8),
+        // Resign focus so CodeEditorView accepts the update
+        NSApp.keyWindow?.makeFirstResponder(nil)
+        
+        guard let data = editedBody.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data),
               let pretty = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
               let str = String(data: pretty, encoding: .utf8)
         else { return }
-        rule.mockResponse.body = str
-    }
-}
-
-struct MacCodeEditor: NSViewRepresentable {
-    @Binding var text: String
-
-    func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSScrollView()
-        let textView = NSTextView()
-        
-        textView.isAutomaticQuoteSubstitutionEnabled = false
-        textView.isAutomaticDashSubstitutionEnabled = false
-        textView.isAutomaticTextReplacementEnabled = false
-        textView.isRichText = false
-        textView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
-        textView.backgroundColor = .textBackgroundColor
-        textView.textColor = .labelColor
-        textView.allowsUndo = true
-        
-        textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = false
-        textView.autoresizingMask = [.width]
-        
-        textView.textContainer?.containerSize = NSSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
-        textView.textContainer?.widthTracksTextView = true
-        
-        textView.delegate = context.coordinator
-        
-        scrollView.documentView = textView
-        scrollView.hasVerticalScroller = true
-        
-        return scrollView
-    }
-
-    func updateNSView(_ nsView: NSScrollView, context: Context) {
-        let textView = nsView.documentView as? NSTextView
-        if textView?.string != text {
-            textView?.string = text
-        }
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    class Coordinator: NSObject, NSTextViewDelegate {
-        var parent: MacCodeEditor
-        
-        init(_ parent: MacCodeEditor) {
-            self.parent = parent
-        }
-
-        func textDidChange(_ notification: Notification) {
-            guard let textView = notification.object as? NSTextView else { return }
-            self.parent.text = textView.string
-        }
+        editedBody = str
+        editorUpdateId = UUID() // Force update after formatting
     }
 }

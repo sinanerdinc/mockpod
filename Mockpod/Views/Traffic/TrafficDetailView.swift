@@ -13,6 +13,7 @@ struct TrafficDetailView: View {
     }
 
     @State private var selectedTab: Tab = .overview
+    @State private var isCurlCopied: Bool = false
 
     private var entry: TrafficEntry? { proxyManager.selectedEntry }
 
@@ -59,19 +60,26 @@ struct TrafficDetailView: View {
                 Divider()
 
                 // Tab content
-                ScrollView {
-                    switch selectedTab {
-                    case .overview:
-                        overviewTab(entry)
-                    case .request:
-                        requestTab(entry)
-                    case .response:
-                        responseTab(entry)
-                    case .curl:
-                        curlTab(entry)
+                if selectedTab == .curl {
+                    curlTab(entry)
+                } else if selectedTab == .response {
+                     responseTab(entry)
+                } else {
+                    ScrollView {
+                        switch selectedTab {
+                        case .overview:
+                            overviewTab(entry)
+                        case .request:
+                            requestTab(entry)
+                        case .response:
+                            responseTab(entry)
+                        default:
+                            EmptyView()
+                        }
                     }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity) // Fill available space
         } else {
             VStack(spacing: 8) {
                 Image(systemName: "doc.text.magnifyingglass")
@@ -128,19 +136,49 @@ struct TrafficDetailView: View {
     // MARK: - Response Tab
 
     private func responseTab(_ entry: TrafficEntry) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if let headers = entry.responseHeaders {
-                infoSection("Response Headers") {
-                    headersList(headers)
+        GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: 0) {
+                // Top Half: Headers (50%)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Response Headers")
+                        .font(.headline)
+                        .padding(.horizontal)
+                        .padding(.top)
+                    
+                    if let headers = entry.responseHeaders {
+                        ScrollView {
+                            headersList(headers)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        Text("No Headers")
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                 }
-            }
-            if let body = entry.prettyResponseBody, !body.isEmpty {
-                infoSection("Response Body") {
-                    codeBlock(body)
+                .frame(height: geometry.size.height * 0.5)
+                // Removed .background(...)
+                
+                Divider()
+                
+                // Bottom Half: Body (50%)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Response Body")
+                        .font(.headline)
+                        .padding(.horizontal)
+                        .padding(.top)
+                    
+                    if let body = entry.prettyResponseBody, !body.isEmpty {
+                        codeBlock(body, minHeight: 100, isFlexible: true)
+                    } else {
+                        Text("No Body")
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                 }
+                .frame(height: geometry.size.height * 0.5)
             }
         }
-        .padding()
     }
 
     // MARK: - cURL Tab
@@ -154,13 +192,25 @@ struct TrafficDetailView: View {
                 Button {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(entry.toCurl(), forType: .string)
+                    isCurlCopied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        isCurlCopied = false
+                    }
                 } label: {
-                    Label("Copy", systemImage: "doc.on.doc")
+                    if isCurlCopied {
+                        Label("Copied!", systemImage: "checkmark")
+                            .foregroundStyle(.green)
+                    } else {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
                 }
             }
-            codeBlock(entry.toCurl())
+            .padding(.horizontal)
+            .padding(.top)
+            
+            codeBlock(entry.toCurl(), minHeight: 100, isFlexible: true)
         }
-        .padding()
+        // distinct padding management for full height
     }
 
     // MARK: - Helper Views
@@ -191,26 +241,29 @@ struct TrafficDetailView: View {
                 HStack(alignment: .top) {
                     Text(header.name)
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 140, alignment: .trailing)
+                        .multilineTextAlignment(.trailing)
+                    
                     Text(header.value)
                         .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.primary)
                         .textSelection(.enabled)
+                    
+                    Spacer()
                 }
             }
         }
-        .padding(8)
-        .background(Color(.textBackgroundColor).opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .padding(.horizontal) // Add horizontal padding instead of box padding
+        // Removed .padding(8)
+        // Removed .background(...)
+        // Removed .clipShape(...)
     }
 
-    private func codeBlock(_ text: String) -> some View {
-        ScrollView(.horizontal) {
-            Text(text)
-                .font(.system(.caption, design: .monospaced))
-                .textSelection(.enabled)
-                .padding(12)
-        }
-        .background(Color(.textBackgroundColor).opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+    private func codeBlock(_ text: String, minHeight: CGFloat = 100, isFlexible: Bool = false) -> some View {
+        CodeEditorView(text: .constant(text), isEditable: false)
+            .frame(minHeight: minHeight, maxHeight: isFlexible ? .infinity : max(400, minHeight))
+            .border(Color.gray.opacity(0.2), width: 1)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }

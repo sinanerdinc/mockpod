@@ -109,7 +109,7 @@ final class CertificateManager {
             OrganizationName("Mockpod")
         }
 
-        let leafPublicKey = Certificate.PublicKey(leafKey.publicKey)
+        _ = Certificate.PublicKey(leafKey.publicKey)
 
         let extensions = try X509.Certificate.Extensions {
             Critical(BasicConstraints.notCertificateAuthority)

@@ -6,11 +6,14 @@ struct TrafficView: View {
     @EnvironmentObject var ruleStore: RuleStore
 
     var body: some View {
-        HSplitView {
-            TrafficListView()
-                .frame(minWidth: 350)
-            TrafficDetailView()
-                .frame(minWidth: 400)
+        GeometryReader { geometry in
+            HSplitView {
+                TrafficListView()
+                    .frame(width: geometry.size.width * 0.5)
+                    .frame(minWidth: 300)
+                TrafficDetailView()
+                    .frame(minWidth: 300, maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
     }
 }
