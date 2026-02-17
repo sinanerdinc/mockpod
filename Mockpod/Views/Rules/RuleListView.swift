@@ -5,6 +5,7 @@ struct RuleListView: View {
     @EnvironmentObject var ruleStore: RuleStore
     @State private var showEditor = false
     @State private var editingRule: MockRule?
+    @State private var selectedRuleIDs: Set<UUID> = []
     @State private var searchText = ""
     @State private var statusFilter: Bool? = nil // nil = All, true = Active, false = Inactive
     @State private var methodFilter: String = "ALL"
@@ -136,24 +137,48 @@ struct RuleListView: View {
                 }
                 .padding()
             } else {
-                List(filteredRules, selection: $ruleStore.selectedRuleID) { rule in
+                List(filteredRules, selection: $selectedRuleIDs) { rule in
                     RuleRowView(rule: rule) {
                         ruleStore.toggleRule(id: rule.id)
                     }
                     .contextMenu {
-                        Button("Edit") {
-                            editingRule = rule
-                            showEditor = true
-                        }
                         Button("Delete", role: .destructive) {
-                            ruleStore.deleteRule(id: rule.id)
+                            deleteSelectedRules()
                         }
                     }
                     .tag(rule.id)
                 }
                 .listStyle(.inset)
+                .onDeleteCommand {
+                    deleteSelectedRules()
+                }
+                .onChange(of: selectedRuleIDs) {
+                    if selectedRuleIDs.count == 1, let id = selectedRuleIDs.first {
+                        ruleStore.selectedRuleID = id
+                    } else if selectedRuleIDs.isEmpty {
+                        ruleStore.selectedRuleID = nil
+                    }
+                }
+                .onChange(of: ruleStore.selectedRuleID) {
+                    if let id = ruleStore.selectedRuleID {
+                        if !selectedRuleIDs.contains(id) {
+                            selectedRuleIDs = [id]
+                        }
+                    } else {
+                        selectedRuleIDs = []
+                    }
+                }
             }
         }
+    }
+
+    private func deleteSelectedRules() {
+        guard !selectedRuleIDs.isEmpty else { return }
+        for id in selectedRuleIDs {
+            ruleStore.deleteRule(id: id)
+        }
+        selectedRuleIDs.removeAll()
+        ruleStore.selectedRuleID = nil
     }
 
     @ViewBuilder
