@@ -104,7 +104,7 @@ final class ProxyManager: ObservableObject {
 
     private func addTrafficEntry(_ entry: TrafficEntry) {
         trafficEntries.insert(entry, at: 0)
-        if trafficEntries.count > 10000 {
+        if trafficEntries.count > 1000 {
             trafficEntries.removeLast()
         }
     }

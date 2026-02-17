@@ -61,7 +61,7 @@ struct RuleSetDetailView: View {
                     HStack(spacing: 8) {
                         Text("\(ruleSet.rules.count) rules")
                         Text("•")
-                        Text("\(ruleSet.enabledRuleCount) enabled")
+                        Text("\(ruleSet.enabledRuleCount) active")
                             .foregroundStyle(.green)
                         Text("•")
                         Text(ruleSet.createdAt.formatted(.dateTime))

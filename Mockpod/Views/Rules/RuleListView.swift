@@ -5,6 +5,33 @@ struct RuleListView: View {
     @EnvironmentObject var ruleStore: RuleStore
     @State private var showEditor = false
     @State private var editingRule: MockRule?
+    @State private var searchText = ""
+    @State private var statusFilter: Bool? = nil // nil = All, true = Active, false = Inactive
+    @State private var methodFilter: String = "ALL"
+
+    var filteredRules: [MockRule] {
+        ruleStore.rules.filter { rule in
+            // Status Filter
+            if let status = statusFilter {
+                if rule.isEnabled != status { return false }
+            }
+
+            // Method Filter
+            if methodFilter != "ALL" {
+                if rule.matcher.method != methodFilter { return false }
+            }
+
+            // Search Filter
+            if !searchText.isEmpty {
+                let query = searchText.lowercased()
+                let matchesName = rule.name.lowercased().contains(query)
+                let matchesURL = rule.matcher.urlPattern.lowercased().contains(query)
+                return matchesName || matchesURL
+            }
+
+            return true
+        }
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -25,10 +52,70 @@ struct RuleListView: View {
                 Text("Rules")
                     .font(.headline)
                 Spacer()
-                Text("\(ruleStore.rules.count) rules, \(ruleStore.rules.filter(\.isEnabled).count) enabled")
+                Text("\(ruleStore.rules.count) rules, \(ruleStore.rules.filter(\.isEnabled).count) active")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .padding(8)
+            .background(.bar)
+            .background(.bar)
+            Divider()
+
+            // Filter bar
+            GeometryReader { geo in
+                let totalWidth = geo.size.width - 16 // 8 padding on each side
+                let spacing: CGFloat = 8
+                let availableWidth = totalWidth - (spacing * 2)
+                let searchWidth = availableWidth * 0.5
+                let pickerWidth = availableWidth * 0.25
+
+                HStack(spacing: spacing) {
+                    // Search field (60%)
+                    HStack(spacing: 6) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(.secondary)
+                            .font(.body)
+                        TextField("Search rules...", text: $searchText)
+                            .textFieldStyle(.plain)
+                            .font(.body)
+                        if !searchText.isEmpty {
+                            Button {
+                                searchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(.quaternary.opacity(0.5))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .frame(width: searchWidth)
+
+                    // Status filter (20%)
+                    Picker("Status", selection: $statusFilter) {
+                        Text("All").tag(Optional<Bool>.none)
+                        Text("Active").tag(Optional(true))
+                        Text("Inactive").tag(Optional(false))
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: pickerWidth)
+
+                    // Method filter (20%)
+                    Picker("Method", selection: $methodFilter) {
+                        Text("All").tag("ALL")
+                        ForEach(["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"], id: \.self) { method in
+                            Text(method).tag(method)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: pickerWidth)
+                }
+                .position(x: geo.size.width / 2, y: geo.size.height / 2)
+            }
+            .frame(height: 50) // Fixed height for filter bar area
             .padding(8)
             .background(.bar)
             Divider()
@@ -49,7 +136,7 @@ struct RuleListView: View {
                 }
                 .padding()
             } else {
-                List(ruleStore.rules, selection: $ruleStore.selectedRuleID) { rule in
+                List(filteredRules, selection: $ruleStore.selectedRuleID) { rule in
                     RuleRowView(rule: rule) {
                         ruleStore.toggleRule(id: rule.id)
                     }

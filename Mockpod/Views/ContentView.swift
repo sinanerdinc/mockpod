@@ -169,15 +169,7 @@ struct ContentView: View {
             }
             .help(proxyManager.isRecording ? "Stop Recording" : "Start Recording")
 
-            if selectedSection == .traffic {
-                Divider()
-                Button {
-                    proxyManager.clearTraffic()
-                } label: {
-                    Image(systemName: "trash")
-                }
-                .help("Clear Traffic")
-            }
+
         }
     }
 }

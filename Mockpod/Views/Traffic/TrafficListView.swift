@@ -30,6 +30,7 @@ struct TrafficListView: View {
                     .foregroundStyle(.tertiary)
                 TextField("Filter requests...", text: $proxyManager.searchText)
                     .textFieldStyle(.plain)
+                
                 if !proxyManager.searchText.isEmpty {
                     Button {
                         proxyManager.searchText = ""
@@ -39,6 +40,17 @@ struct TrafficListView: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                Spacer()
+
+                Button {
+                    proxyManager.clearTraffic()
+                } label: {
+                    Image(systemName: "trash")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Clear traffic")
             }
             .padding(8)
             .background(.bar)
