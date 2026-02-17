@@ -61,11 +61,18 @@ struct TrafficListView: View {
             if proxyManager.filteredEntries.isEmpty {
                 emptyState
             } else {
-                List(proxyManager.filteredEntries, selection: $proxyManager.selectedEntryID) { entry in
-                    TrafficRowView(entry: entry)
-                        .tag(entry.id)
+                ScrollViewReader { proxy in
+                    List(proxyManager.filteredEntries, selection: $proxyManager.selectedEntryID) { entry in
+                        TrafficRowView(entry: entry)
+                            .tag(entry.id)
+                    }
+                    .listStyle(.inset)
+                    .onChange(of: proxyManager.trafficEntries.first?.id) { _, _ in
+                        if let first = proxyManager.filteredEntries.first {
+                            proxy.scrollTo(first.id, anchor: .top)
+                        }
+                    }
                 }
-                .listStyle(.inset)
             }
         }
     }
