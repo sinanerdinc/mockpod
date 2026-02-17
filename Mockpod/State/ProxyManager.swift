@@ -87,9 +87,14 @@ final class ProxyManager: ObservableObject {
     }
 
     func stopProxy() {
-        proxyServer?.stop()
+        let server = proxyServer
         proxyServer = nil
         isRunning = false
+        DispatchQueue.global(qos: .utility).async {
+            server?.stop()
+            // server released here → deinit runs on background thread
+            // syncShutdownGracefully no longer blocks main thread
+        }
     }
 
     func toggleProxy() {
