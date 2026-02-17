@@ -11,9 +11,17 @@ struct RuleEditorView: View {
     // ID to control when the editor should force update its content from the binding
     @State private var editorUpdateId: UUID = UUID()
 
+    enum ResponseTab: String, CaseIterable {
+        case body = "Body"
+        case headers = "Headers"
+    }
+
+    @State private var selectedResponseTab: ResponseTab = .body
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
                 // Rule Name
                 section("Rule Name") {
                     TextField("Name", text: $rule.name)
@@ -94,73 +102,86 @@ struct RuleEditorView: View {
                     }
                 }
 
-                // Response Headers
-                section("Response Headers") {
-                    ForEach(Array(rule.mockResponse.headers.enumerated()), id: \.element.id) { index, header in
-                        HStack {
-                            TextField("Name", text: Binding(
-                                get: { rule.mockResponse.headers[index].name },
-                                set: { rule.mockResponse.headers[index].name = $0 }
-                            ))
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 200)
+                // Response Content (Tabs)
+                section("Response Content") {
+                    Picker("", selection: $selectedResponseTab) {
+                        ForEach(ResponseTab.allCases, id: \.self) { tab in
+                            Text(tab.rawValue).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
 
-                            TextField("Value", text: Binding(
-                                get: { rule.mockResponse.headers[index].value },
-                                set: { rule.mockResponse.headers[index].value = $0 }
-                            ))
-                            .textFieldStyle(.roundedBorder)
+                    if selectedResponseTab == .headers {
+                        // Headers Editor
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(Array(rule.mockResponse.headers.enumerated()), id: \.element.id) { index, header in
+                                HStack {
+                                    TextField("Name", text: Binding(
+                                        get: { rule.mockResponse.headers[index].name },
+                                        set: { rule.mockResponse.headers[index].name = $0 }
+                                    ))
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 200)
 
+                                    TextField("Value", text: Binding(
+                                        get: { rule.mockResponse.headers[index].value },
+                                        set: { rule.mockResponse.headers[index].value = $0 }
+                                    ))
+                                    .textFieldStyle(.roundedBorder)
+
+                                    Button {
+                                        rule.mockResponse.headers.remove(at: index)
+                                    } label: {
+                                        Image(systemName: "minus.circle")
+                                            .foregroundStyle(.red)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
                             Button {
-                                rule.mockResponse.headers.remove(at: index)
+                                rule.mockResponse.headers.append(HTTPHeader(name: "", value: ""))
                             } label: {
-                                Image(systemName: "minus.circle")
-                                    .foregroundStyle(.red)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    Button {
-                        rule.mockResponse.headers.append(HTTPHeader(name: "", value: ""))
-                    } label: {
-                        Label("Add Header", systemImage: "plus")
-                            .font(.caption)
-                    }
-                }
-
-                Divider()
-
-                // Response Body
-                section("Response Body") {
-                    CodeEditorView(text: $editedBody, updateId: editorUpdateId)
-                        .frame(minHeight: 200)
-                        .border(Color.gray.opacity(0.3))
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
-
-                    HStack {
-                        Button("Format JSON") {
-                            formatJSON()
-                        }
-                        
-                        Button {
-                            rule.mockResponse.body = editedBody
-                            isSaveSuccess = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                isSaveSuccess = false
-                            }
-                        } label: {
-                            if isSaveSuccess {
-                                Label("Saved!", systemImage: "checkmark")
-                                    .foregroundStyle(.green)
-                            } else {
-                                Text("Save")
+                                Label("Add Header", systemImage: "plus")
+                                    .font(.caption)
                             }
                         }
-                        
-                        Spacer()
-                        Text("\(editedBody.count) chars")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                        .padding(.top, 4)
+                    } else {
+                        // Body Editor
+                        VStack(alignment: .leading, spacing: 8) {
+                            CodeEditorView(text: $editedBody, updateId: editorUpdateId)
+                                .frame(height: geometry.size.height * 0.9)
+                                .border(Color.gray.opacity(0.3))
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+        
+                            HStack {
+                                Button("Format JSON") {
+                                    formatJSON()
+                                }
+                                
+                                Button {
+                                    rule.mockResponse.body = editedBody
+                                    isSaveSuccess = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        isSaveSuccess = false
+                                    }
+                                } label: {
+                                    if isSaveSuccess {
+                                        Label("Saved!", systemImage: "checkmark")
+                                            .foregroundStyle(.green)
+                                    } else {
+                                        Text("Save")
+                                    }
+                                }
+                                
+                                Spacer()
+                                Text("\(editedBody.count) chars")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        .padding(.top, 4)
                     }
                 }
             }
@@ -177,6 +198,7 @@ struct RuleEditorView: View {
             editedBody = rule.mockResponse.body
             editorUpdateId = UUID() // Force update on rule change
         }
+    }
     }
 
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
