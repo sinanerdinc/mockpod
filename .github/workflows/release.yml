@@ -25,8 +25,8 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           BUILD_NUMBER=${{ github.run_number }}
-          sed -i '' "s/MARKETING_VERSION: \".*\"/MARKETING_VERSION: \"$VERSION\"/" project.yml
-          sed -i '' "s/CURRENT_PROJECT_VERSION: .*/CURRENT_PROJECT_VERSION: $BUILD_NUMBER/" project.yml
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "APP_BUILD=$BUILD_NUMBER" >> $GITHUB_ENV
           echo "Version: $VERSION, Build: $BUILD_NUMBER"
 
       - name: Generate Xcode Project
@@ -46,6 +46,8 @@ jobs:
           xcodebuild -scheme Mockpod \
             -configuration Release \
             -derivedDataPath build \
+            MARKETING_VERSION="${{ env.APP_VERSION }}" \
+            CURRENT_PROJECT_VERSION="${{ env.APP_BUILD }}" \
             clean build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
