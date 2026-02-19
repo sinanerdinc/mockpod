@@ -220,5 +220,12 @@ struct RuleEditorView: View {
         else { return }
         editedBody = str
         editorUpdateId = UUID() // Force update after formatting
+        
+        // Auto-save formatted body
+        rule.mockResponse.body = editedBody
+        isSaveSuccess = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            isSaveSuccess = false
+        }
     }
 }
