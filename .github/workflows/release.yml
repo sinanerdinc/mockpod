@@ -27,6 +27,8 @@ jobs:
           BUILD_NUMBER=${{ github.run_number }}
           echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
           echo "APP_BUILD=$BUILD_NUMBER" >> $GITHUB_ENV
+          sed -i '' "s/MARKETING_VERSION: \".*\"/MARKETING_VERSION: \"$VERSION\"/" project.yml
+          sed -i '' "s/CURRENT_PROJECT_VERSION: .*/CURRENT_PROJECT_VERSION: $BUILD_NUMBER/" project.yml
           echo "Version: $VERSION, Build: $BUILD_NUMBER"
 
       - name: Generate Xcode Project
