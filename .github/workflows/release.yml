@@ -101,6 +101,12 @@ jobs:
             ```
 
             Then open Mockpod normally.
+
+            Or install via Homebrew:
+
+            ```
+            brew install --cask sinanerdinc/tap/mockpod
+            ```
             
             ---
             
