@@ -115,3 +115,13 @@ jobs:
             ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update Homebrew Cask
+        uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          formula-name: mockpod
+          formula-path: Casks/mockpod.rb
+          homebrew-tap: sinanerdinc/homebrew-tap
+          download-url: https://github.com/sinanerdinc/mockpod/releases/download/${{ github.ref_name }}/Mockpod.dmg
+        env:
+          COMMITTER_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
