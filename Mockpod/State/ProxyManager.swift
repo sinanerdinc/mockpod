@@ -10,6 +10,7 @@ final class ProxyManager: ObservableObject {
     @Published var trafficEntries: [TrafficEntry] = []
     @Published var selectedEntryID: UUID?
     @Published var searchText = ""
+    @Published var advancedFilter = TrafficFilter()
     @Published var isRecording = false
     @Published var recordingName = ""
     @Published var recordedEntries: [TrafficEntry] = []
@@ -19,14 +20,33 @@ final class ProxyManager: ObservableObject {
     let ruleEngine = RuleEngine()
 
     var filteredEntries: [TrafficEntry] {
-        if searchText.isEmpty {
-            return trafficEntries
+        var entries = trafficEntries
+
+        // Text search filter
+        if !searchText.isEmpty {
+            entries = entries.filter { entry in
+                entry.url.localizedCaseInsensitiveContains(searchText) ||
+                entry.method.localizedCaseInsensitiveContains(searchText) ||
+                entry.host.localizedCaseInsensitiveContains(searchText)
+            }
         }
-        return trafficEntries.filter { entry in
-            entry.url.localizedCaseInsensitiveContains(searchText) ||
-            entry.method.localizedCaseInsensitiveContains(searchText) ||
-            entry.host.localizedCaseInsensitiveContains(searchText)
+
+        // Advanced filter
+        if advancedFilter.isActive {
+            entries = entries.filter { advancedFilter.matches($0) }
         }
+
+        return entries
+    }
+
+    /// Unique hosts from current traffic entries
+    var uniqueHosts: [String] {
+        Array(Set(trafficEntries.map { $0.host })).sorted()
+    }
+
+    /// Unique status codes from current traffic entries
+    var uniqueStatusCodes: [Int] {
+        Array(Set(trafficEntries.compactMap { $0.responseStatusCode })).sorted()
     }
 
     var selectedEntry: TrafficEntry? {

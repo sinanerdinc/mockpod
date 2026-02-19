@@ -21,6 +21,7 @@ struct TrafficView: View {
 /// List of captured HTTP traffic entries
 struct TrafficListView: View {
     @EnvironmentObject var proxyManager: ProxyManager
+    @State private var showAdvancedFilter = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,6 +43,22 @@ struct TrafficListView: View {
                 }
 
                 Spacer()
+
+                // Advanced filter button
+                Button {
+                    showAdvancedFilter.toggle()
+                } label: {
+                    Image(systemName: proxyManager.advancedFilter.isActive
+                          ? "line.3.horizontal.decrease.circle.fill"
+                          : "line.3.horizontal.decrease.circle")
+                        .foregroundStyle(proxyManager.advancedFilter.isActive ? Color.accentColor : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Advanced filters")
+                .popover(isPresented: $showAdvancedFilter) {
+                    AdvancedFilterView()
+                        .environmentObject(proxyManager)
+                }
 
                 Button {
                     proxyManager.clearTraffic()
