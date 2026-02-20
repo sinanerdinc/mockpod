@@ -31,6 +31,13 @@ jobs:
           sed -i '' "s/CURRENT_PROJECT_VERSION: .*/CURRENT_PROJECT_VERSION: $BUILD_NUMBER/" project.yml
           echo "Version: $VERSION, Build: $BUILD_NUMBER"
 
+      - name: Stamp version into Info.plist
+        run: |
+          plutil -replace CFBundleShortVersionString -string "${{ env.APP_VERSION }}" Mockpod/Info.plist
+          plutil -replace CFBundleVersion -string "${{ env.APP_BUILD }}" Mockpod/Info.plist
+          echo "Info.plist updated:"
+          plutil -p Mockpod/Info.plist | grep -E "CFBundleShortVersionString|CFBundleVersion"
+
       - name: Generate Xcode Project
         run: xcodegen
 
