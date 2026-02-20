@@ -77,6 +77,7 @@ This project uses `xcodegen` to generate the Xcode project file dynamically. Thi
 2. **Configure proxy settings** – Point your system or browser proxy to the local server (default port is usually `8080`).
 3. **Create a Rule Set** – Define how specific requests should be intercepted and mocked.
 4. **Start the proxy** – Begin intercepting traffic.
+5. **Pin important requests** – Right-click any traffic entry and select **Pin** to keep it at the top of the list. Pinned entries are preserved when clearing traffic.
 
 ---
 
