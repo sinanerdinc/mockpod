@@ -79,9 +79,39 @@ struct TrafficListView: View {
                 emptyState
             } else {
                 ScrollViewReader { proxy in
-                    List(proxyManager.filteredEntries, selection: $proxyManager.selectedEntryID) { entry in
-                        TrafficRowView(entry: entry)
-                            .tag(entry.id)
+                    List(selection: $proxyManager.selectedEntryID) {
+                        // Pinned entries
+                        if !proxyManager.pinnedFilteredEntries.isEmpty {
+                            ForEach(proxyManager.pinnedFilteredEntries) { entry in
+                                TrafficRowView(entry: entry, isPinned: true)
+                                    .tag(entry.id)
+                                    .contextMenu {
+                                        Button {
+                                            proxyManager.togglePin(entry.id)
+                                        } label: {
+                                            Label("Unpin", systemImage: "pin.slash")
+                                        }
+                                    }
+                            }
+
+                            // Divider between pinned and unpinned
+                            if !proxyManager.unpinnedFilteredEntries.isEmpty {
+                                Divider()
+                            }
+                        }
+
+                        // Unpinned entries
+                        ForEach(proxyManager.unpinnedFilteredEntries) { entry in
+                            TrafficRowView(entry: entry, isPinned: false)
+                                .tag(entry.id)
+                                .contextMenu {
+                                    Button {
+                                        proxyManager.togglePin(entry.id)
+                                    } label: {
+                                        Label("Pin", systemImage: "pin")
+                                    }
+                                }
+                        }
                     }
                     .listStyle(.inset)
                     .onChange(of: proxyManager.trafficEntries.first?.id) { _, _ in
@@ -119,9 +149,16 @@ struct TrafficListView: View {
 /// A single row in the traffic list
 struct TrafficRowView: View {
     let entry: TrafficEntry
+    var isPinned: Bool = false
 
     var body: some View {
         HStack(spacing: 8) {
+            if isPinned {
+                Image(systemName: "pin.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+            }
+
             MethodBadge(method: entry.method)
 
             VStack(alignment: .leading, spacing: 2) {

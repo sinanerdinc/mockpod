@@ -9,6 +9,7 @@ final class ProxyManager: ObservableObject {
     @Published var port: Int = 8080
     @Published var trafficEntries: [TrafficEntry] = []
     @Published var selectedEntryID: UUID?
+    @Published var pinnedEntryIDs: Set<UUID> = []
     @Published var searchText = ""
     @Published var advancedFilter = TrafficFilter()
     @Published var isRecording = false
@@ -36,7 +37,30 @@ final class ProxyManager: ObservableObject {
             entries = entries.filter { advancedFilter.matches($0) }
         }
 
-        return entries
+        // Sort: pinned first, then by original order
+        let pinned = entries.filter { pinnedEntryIDs.contains($0.id) }
+        let unpinned = entries.filter { !pinnedEntryIDs.contains($0.id) }
+        return pinned + unpinned
+    }
+
+    var pinnedFilteredEntries: [TrafficEntry] {
+        filteredEntries.filter { pinnedEntryIDs.contains($0.id) }
+    }
+
+    var unpinnedFilteredEntries: [TrafficEntry] {
+        filteredEntries.filter { !pinnedEntryIDs.contains($0.id) }
+    }
+
+    func togglePin(_ id: UUID) {
+        if pinnedEntryIDs.contains(id) {
+            pinnedEntryIDs.remove(id)
+        } else {
+            pinnedEntryIDs.insert(id)
+        }
+    }
+
+    func isPinned(_ id: UUID) -> Bool {
+        pinnedEntryIDs.contains(id)
     }
 
     /// Unique hosts from current traffic entries
@@ -135,8 +159,11 @@ final class ProxyManager: ObservableObject {
     }
 
     func clearTraffic() {
-        trafficEntries.removeAll()
-        selectedEntryID = nil
+        trafficEntries.removeAll { !pinnedEntryIDs.contains($0.id) }
+        // Keep selectedEntryID if it's pinned, otherwise clear
+        if let selectedID = selectedEntryID, !pinnedEntryIDs.contains(selectedID) {
+            selectedEntryID = nil
+        }
     }
 
     // MARK: - Recording
