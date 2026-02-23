@@ -175,6 +175,21 @@
       margin-bottom: 1rem;
     }
 
+    .demo-wrap {
+      margin: 2.5rem 0;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 32px rgba(249, 115, 22, 0.08);
+      max-width: 100%;
+    }
+
+    .demo-wrap img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
     .audience {
       display: flex;
       gap: 1rem;
@@ -387,6 +402,9 @@
     <h2>What is Mockpod?</h2>
     <p>Mockpod is a local proxy server that lets you capture, inspect, and mock HTTP/HTTPS traffic on your Mac. It's ideal for testing edge cases, simulating backend failures, and developing frontend applications without a fully functional API.</p>
     <p>Whether you're building an app that depends on external APIs, testing how your product behaves when the server fails, or investigating network traffic — Mockpod gives you full control.</p>
+    <div class="demo-wrap">
+      <img src="demo.gif" alt="Mockpod in action: capturing traffic, filtering requests, and inspecting headers and responses">
+    </div>
     <div class="audience">
       <span class="audience-chip">Developers</span>
       <span class="audience-chip">QA Engineers</span>
