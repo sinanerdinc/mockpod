@@ -45,7 +45,7 @@ If you prefer not to use Homebrew, you can manually download the latest .dmg fil
 Since Mockpod is an open-source tool distributed outside the Mac App Store, macOS Gatekeeper may quarantine it upon the first launch. If the app fails to open or macOS displays a warning, simply run the following command in your Terminal to remove the quarantine flag:
 
 ```bash
-xattr -cr /Applications/Mockpad.app
+xattr -cr /Applications/Mockpod.app
 ```
 
 After running the command, right-click the Mockpod app and select Open. macOS will remember your choice, and you can launch it normally from then on.
