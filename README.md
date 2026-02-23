@@ -1,8 +1,21 @@
 <div align="center">
   <img src="Mockpod/Assets.xcassets/AppIcon.appiconset/256-mac.png" alt="Mockpod" width="128" height="128">
 </div>
+<h1 align="center">Mockpod</h1>
 
-# Mockpod
+<p align="center">
+  <strong>Mockpod is a powerful network interception and mocking tool designed for macOS users. </strong>
+</p>
+
+<p align="center">
+  Built for Developer, QA and Security Researcher
+</p>
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Mockpod demo">
+</p>
+
+# What is Mockpod?
 
 **A powerful network interception and mocking tool for macOS users.**
 
