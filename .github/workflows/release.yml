@@ -117,6 +117,12 @@ jobs:
             brew install --cask sinanerdinc/tap/mockpod
             ```
             
+            Note: To update Mockpod to the newest version in the future, simply run:
+
+            ```
+            brew upgrade --cask mockpod
+            ```
+            
             ---
             
             ## Checksums (SHA256)
