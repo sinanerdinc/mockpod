@@ -8,6 +8,8 @@ final class UpdateChecker: ObservableObject {
     @Published var updateAvailable = false
     @Published var latestVersion: String = ""
     @Published var releaseURL: URL?
+    @Published var latestGitHubVersion: String = ""
+    @Published var latestGitHubReleaseURL: URL?
     @Published var isDismissed = false
     @Published var isChecking = false
 
@@ -21,12 +23,18 @@ final class UpdateChecker: ObservableObject {
 
         Task {
             defer { isChecking = false }
-            if let info = await VersionCheckService.checkForUpdate() {
-                updateAvailable = true
-                latestVersion = info.latestVersion
-                releaseURL = info.releaseURL
-                isDismissed = false
-                NSSound(named: "Glass")?.play()
+            if let release = await VersionCheckService.fetchLatestRelease() {
+                latestGitHubVersion = release.version
+                latestGitHubReleaseURL = release.releaseURL
+                if VersionCheckService.isNewer(release.version, than: VersionCheckService.currentVersion) {
+                    updateAvailable = true
+                    latestVersion = release.version
+                    releaseURL = release.releaseURL
+                    isDismissed = false
+                    NSSound(named: "Glass")?.play()
+                } else {
+                    updateAvailable = false
+                }
             } else {
                 updateAvailable = false
             }

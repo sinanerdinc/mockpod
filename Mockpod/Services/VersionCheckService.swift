@@ -10,6 +10,11 @@ enum VersionCheckService {
         let releaseURL: URL
     }
 
+    struct ReleaseInfo {
+        let version: String
+        let releaseURL: URL
+    }
+
     /// Current app version. In DEBUG, can override via UserDefaults "MockpodTestCurrentVersion" for testing.
     static var currentVersion: String {
         #if DEBUG
@@ -18,6 +23,10 @@ enum VersionCheckService {
         }
         #endif
         return Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
+    }
+
+    static var currentBuild: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
     }
 
     /// Parse tag (e.g. "v1.0.4") to version string ("1.0.4")
@@ -42,6 +51,15 @@ enum VersionCheckService {
 
     /// Fetch latest release from GitHub. Returns UpdateInfo if a newer version exists.
     static func checkForUpdate() async -> UpdateInfo? {
+        guard let release = await fetchLatestRelease() else { return nil }
+        if isNewer(release.version, than: currentVersion) {
+            return UpdateInfo(latestVersion: release.version, releaseURL: release.releaseURL)
+        }
+        return nil
+    }
+
+    /// Fetch latest release from GitHub regardless of whether update is needed.
+    static func fetchLatestRelease() async -> ReleaseInfo? {
         do {
             var request = URLRequest(url: apiURL)
             request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
@@ -55,13 +73,9 @@ enum VersionCheckService {
                 let html_url: String
             }
             let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
-            let latestVersion = parseTag(release.tag_name)
+            let version = parseTag(release.tag_name)
             guard let releaseURL = URL(string: release.html_url) else { return nil }
-
-            if isNewer(latestVersion, than: currentVersion) {
-                return UpdateInfo(latestVersion: latestVersion, releaseURL: releaseURL)
-            }
-            return nil
+            return ReleaseInfo(version: version, releaseURL: releaseURL)
         } catch {
             return nil
         }
