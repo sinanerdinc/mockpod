@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var proxyManager: ProxyManager
     @EnvironmentObject var ruleStore: RuleStore
+    @EnvironmentObject var updateChecker: UpdateChecker
 
     enum SidebarSection: String, CaseIterable {
         case traffic = "Traffic"
@@ -39,6 +40,11 @@ struct ContentView: View {
                 proxyManager: proxyManager,
                 ruleStore: ruleStore
             )
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if updateChecker.shouldShowBanner {
+                updateToast
+            }
         }
     }
 
@@ -125,7 +131,7 @@ struct ContentView: View {
                 Circle()
                     .fill(proxyManager.isRunning ? .green : .red)
                     .frame(width: 8, height: 8)
-                Text(verbatim: proxyManager.isRunning ? "\(proxyManager.localIP):\(proxyManager.port)" : "Stopped")
+                Text(verbatim: proxyManager.isRunning ? "\(proxyManager.localIP):\(String(proxyManager.port))" : "Stopped")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -171,5 +177,35 @@ struct ContentView: View {
 
 
         }
+    }
+
+    // MARK: - Update Toast
+
+    private var updateToast: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "arrow.down.circle.fill")
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("A new version (\(updateChecker.latestVersion)) is available.")
+                    .font(.subheadline)
+                if let url = updateChecker.releaseURL {
+                    Link("View details", destination: url)
+                        .font(.caption.weight(.medium))
+                }
+            }
+            Button {
+                updateChecker.dismissBanner()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary)
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(.orange.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+        .padding(24)
     }
 }

@@ -133,8 +133,8 @@ struct TrafficListView: View {
             Text(proxyManager.isRunning ? "Waiting for traffic..." : "Proxy is not running")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            Text(proxyManager.isRunning
-                 ? "Configure your iOS device to use proxy \(proxyManager.localIP):\(proxyManager.port)"
+            Text(verbatim: proxyManager.isRunning
+                 ? "Configure your iOS device to use proxy \(proxyManager.localIP):\(String(proxyManager.port))"
                  : "Click the play button to start the proxy server")
                 .font(.caption)
                 .foregroundStyle(.tertiary)

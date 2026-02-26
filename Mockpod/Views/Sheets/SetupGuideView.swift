@@ -32,7 +32,7 @@ struct SetupGuideView: View {
                             Text(proxyManager.isRunning ? "Running" : "Stopped")
                                 .bold()
                             if proxyManager.isRunning {
-                                Text("on \(proxyManager.localIP):\(proxyManager.port)")
+                                Text(verbatim: "on \(proxyManager.localIP):\(String(proxyManager.port))")
                                     .font(.system(.body, design: .monospaced))
                             }
                         }
@@ -103,7 +103,7 @@ struct SetupGuideView: View {
                             "Scroll down and tap Configure Proxy",
                             "Select Manual",
                             "Server: \(proxyManager.isRunning ? proxyManager.localIP : "<start proxy first>")",
-                            "Port: \(proxyManager.port)",
+                            "Port: \(String(proxyManager.port))",
                             "Tap Save"
                         ])
                     }
