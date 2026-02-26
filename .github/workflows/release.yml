@@ -25,18 +25,13 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           BUILD_NUMBER=${{ github.run_number }}
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid tag version: $VERSION (expected format: vX.Y.Z)"
+            exit 1
+          fi
           echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
           echo "APP_BUILD=$BUILD_NUMBER" >> $GITHUB_ENV
-          sed -i '' "s/MARKETING_VERSION: \".*\"/MARKETING_VERSION: \"$VERSION\"/" project.yml
-          sed -i '' "s/CURRENT_PROJECT_VERSION: .*/CURRENT_PROJECT_VERSION: $BUILD_NUMBER/" project.yml
           echo "Version: $VERSION, Build: $BUILD_NUMBER"
-
-      - name: Stamp version into Info.plist
-        run: |
-          plutil -replace CFBundleShortVersionString -string "${{ env.APP_VERSION }}" Mockpod/Info.plist
-          plutil -replace CFBundleVersion -string "${{ env.APP_BUILD }}" Mockpod/Info.plist
-          echo "Info.plist updated:"
-          plutil -p Mockpod/Info.plist | grep -E "CFBundleShortVersionString|CFBundleVersion"
 
       - name: Generate Xcode Project
         run: xcodegen
@@ -62,6 +57,21 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_ENTITLEMENTS="" \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Verify built app version
+        run: |
+          APP_INFO="build/Build/Products/Release/Mockpod.app/Contents/Info.plist"
+          ACTUAL_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_INFO")
+          ACTUAL_BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP_INFO")
+          echo "Built app version: ${ACTUAL_VERSION} (${ACTUAL_BUILD})"
+          if [ "$ACTUAL_VERSION" != "${{ env.APP_VERSION }}" ]; then
+            echo "Version mismatch! expected=${{ env.APP_VERSION }}, actual=$ACTUAL_VERSION"
+            exit 1
+          fi
+          if [ "$ACTUAL_BUILD" != "${{ env.APP_BUILD }}" ]; then
+            echo "Build number mismatch! expected=${{ env.APP_BUILD }}, actual=$ACTUAL_BUILD"
+            exit 1
+          fi
 
       - name: Ad-hoc Sign Binary
         run: |
