@@ -130,7 +130,7 @@ jobs:
             Note: To update Mockpod to the newest version in the future, simply run:
 
             ```
-            brew upgrade --cask mockpod
+            brew update && brew upgrade --cask mockpod
             ```
             
             ---

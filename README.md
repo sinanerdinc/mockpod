@@ -31,7 +31,7 @@ brew install --cask sinanerdinc/tap/mockpod
 Note: To update Mockpod to the newest version in the future, simply run:
 
 ```bash
-brew upgrade --cask mockpod
+brew update && brew upgrade --cask mockpod
 ```
 
 ### Option 2: Manual Download
