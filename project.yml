@@ -38,14 +38,22 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     postBuildScripts:
       - script: |
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          VERSION=${TAG#v}
-          COMMITS=$(git rev-list HEAD --count 2>/dev/null || echo "1")
+          if [ -n "$APP_VERSION" ]; then
+            VERSION="$APP_VERSION"
+          else
+            TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            VERSION=${TAG#v}
+          fi
+          if [ -n "$APP_BUILD" ]; then
+            BUILD="$APP_BUILD"
+          else
+            BUILD=$(git rev-list HEAD --count 2>/dev/null || echo "1")
+          fi
           PLIST="${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}"
           if [ -f "$PLIST" ]; then
             /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$PLIST"
-            /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $COMMITS" "$PLIST"
-            echo "Stamped version: $VERSION ($COMMITS)"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "$PLIST"
+            echo "Stamped version: $VERSION ($BUILD)"
           fi
         name: Stamp Version from Git Tag
     dependencies:
