@@ -36,6 +36,18 @@ targets:
         SWIFT_VERSION: "5.10"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    postBuildScripts:
+      - script: |
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION=${TAG#v}
+          COMMITS=$(git rev-list HEAD --count 2>/dev/null || echo "1")
+          PLIST="${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}"
+          if [ -f "$PLIST" ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $COMMITS" "$PLIST"
+            echo "Stamped version: $VERSION ($COMMITS)"
+          fi
+        name: Stamp Version from Git Tag
     dependencies:
       - package: SwiftNIO
         product: NIO
