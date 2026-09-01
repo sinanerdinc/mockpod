@@ -106,6 +106,12 @@ We welcome contributions! Here's the standard workflow:
 
 *Please remember to run `xcodegen` and verify the project builds successfully locally before submitting a PR.*
 
+### Contributors
+
+<a href="https://github.com/sinanerdinc/mockpod/graphs/contributors">
+  <img alt="Dify contributors" src="https://contrib.rocks/image?repo=sinanerdinc/mockpod" />
+</a>
+
 ---
 
 ## 📄 License
